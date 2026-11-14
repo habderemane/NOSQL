@@ -1,0 +1,59 @@
+# Cluster Cassandra de 3 nœuds — Séquence 2 (partitionnement, quorums, cohérence)
+# Démarrage : docker compose up -d   (dans le dossier cassandra) — compter 3 à 6 minutes
+name: s2-cassandra
+
+x-cassandra: &cassandra
+  image: cassandra:5.0
+  environment:
+    CASSANDRA_CLUSTER_NAME: "teranga"
+    CASSANDRA_SEEDS: "cassandra1"                       # nœud de contact pour rejoindre le cluster
+    CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+    CASSANDRA_DC: "dc_dakar"                            # nom du centre de données, repris dans le keyspace
+    CASSANDRA_RACK: "rack1"
+    CASSANDRA_NUM_TOKENS: "16"                          # 16 nœuds virtuels par nœud
+    MAX_HEAP_SIZE: "512M"                               # mémoire Java limitée (poste de 8 Go)
+    HEAP_NEWSIZE: "100M"
+  healthcheck:                                          # « healthy » quand cqlsh répond
+    test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces' > /dev/null 2>&1"]
+    interval: 15s
+    timeout: 10s
+    retries: 20
+    start_period: 60s
+
+services:
+  cassandra1:
+    <<: *cassandra
+    container_name: cassandra1
+    hostname: cassandra1
+    ports:
+      - "9042:9042"
+    volumes:
+      - c1-data:/var/lib/cassandra
+      - ./cql:/cql:ro
+
+  cassandra2:
+    <<: *cassandra
+    container_name: cassandra2
+    hostname: cassandra2
+    volumes:
+      - c2-data:/var/lib/cassandra
+      - ./cql:/cql:ro
+    depends_on:
+      cassandra1:
+        condition: service_healthy                      # un nœud à la fois
+
+  cassandra3:
+    <<: *cassandra
+    container_name: cassandra3
+    hostname: cassandra3
+    volumes:
+      - c3-data:/var/lib/cassandra
+      - ./cql:/cql:ro
+    depends_on:
+      cassandra2:
+        condition: service_healthy
+
+volumes:
+  c1-data:
+  c2-data:
+  c3-data:

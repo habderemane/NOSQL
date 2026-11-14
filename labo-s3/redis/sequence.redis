@@ -1,0 +1,11 @@
+# Labo S3 — partie 6.1 : commandes de la séquence, à taper dans redis-cli
+# docker exec -it s3-redis redis-cli
+# Q2 — panier : un hash par utilisateur, champ = produit, valeur = quantité
+HSET panier:u1024 P-778 2 P-112 1
+HINCRBY panier:u1024 P-778 1
+HGETALL panier:u1024
+EXPIRE panier:u1024 604800
+# Q4 — top des ventes du jour : un sorted set par jour, score = quantité vendue
+ZINCRBY ventes:2026-10-24 3 P-778
+ZREVRANGE ventes:2026-10-24 0 9 WITHSCORES
+EXPIRE ventes:2026-10-24 2592000

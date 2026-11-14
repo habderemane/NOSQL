@@ -1,0 +1,45 @@
+# Replica set MongoDB de 3 nœuds — Séquence 2 (réplication, basculement)
+# Démarrage : docker compose up -d   (dans le dossier mongo)
+name: s2-mongo
+
+x-mongo: &mongo
+  image: mongo:8.0
+  # --replSet : nom du replica set ; --bind_ip_all : accepte les connexions des autres conteneurs
+  # --wiredTigerCacheSizeGB 0.25 : limite la mémoire de chaque nœud (poste de 8 Go)
+  command: ["mongod", "--replSet", "rs-teranga", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+
+services:
+  mongo1:
+    <<: *mongo
+    container_name: mongo1
+    hostname: mongo1
+    ports:
+      - "27117:27017"     # port 27117 côté poste, pour ne pas gêner un MongoDB déjà installé
+    volumes:
+      - mongo1-data:/data/db
+      - ./scripts:/scripts:ro
+
+  mongo2:
+    <<: *mongo
+    container_name: mongo2
+    hostname: mongo2
+    ports:
+      - "27118:27017"
+    volumes:
+      - mongo2-data:/data/db
+      - ./scripts:/scripts:ro
+
+  mongo3:
+    <<: *mongo
+    container_name: mongo3
+    hostname: mongo3
+    ports:
+      - "27119:27017"
+    volumes:
+      - mongo3-data:/data/db
+      - ./scripts:/scripts:ro
+
+volumes:
+  mongo1-data:
+  mongo2-data:
+  mongo3-data:

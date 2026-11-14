@@ -1,0 +1,13 @@
+# Labo S3 — TD, exercice 1 : information voyageurs du BRT (corrigé de la séquence)
+# docker exec -it s3-redis redis-cli   puis taper les commandes
+# R1 — prochains passages : sorted set par arrêt, score = horodatage Unix (09:30 et 09:35 UTC le 24/10/2026)
+ZADD passages:ARRET-017 1792834200 "bus:042|B1" 1792834500 "bus:051|B1"
+ZRANGEBYSCORE passages:ARRET-017 1792834000 +inf LIMIT 0 5
+ZREMRANGEBYSCORE passages:ARRET-017 -inf 1792834000
+# E1 — position courante de chaque bus (longitude, latitude) ; GEOADD écrase l'ancienne
+GEOADD positions:B1 -17.4467 14.6928 bus:042 -17.4380 14.7120 bus:051
+# R2 — position de tous les bus de la ligne B1
+ZRANGE positions:B1 0 -1
+GEOPOS positions:B1 bus:042 bus:051
+# Variante : les bus de la ligne à moins de 3 km d'un voyageur
+GEOSEARCH positions:B1 FROMLONLAT -17.45 14.70 BYRADIUS 3 km ASC WITHCOORD

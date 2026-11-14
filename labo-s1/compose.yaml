@@ -1,0 +1,32 @@
+# Labo S1 — Du relationnel au NoSQL : PostgreSQL 16 et MongoDB 8.0
+# Démarrage : docker compose up -d   (dans le dossier labo-s1)
+name: s1-relationnel
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: s1-postgres
+    environment:
+      POSTGRES_USER: "teranga"
+      POSTGRES_PASSWORD: "teranga"
+      POSTGRES_DB: "teranga"
+    ports:
+      - "5433:5432"       # 5433 côté poste, pour ne pas gêner un PostgreSQL déjà installé
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./sql:/sql:ro
+
+  mongo:
+    image: mongo:8.0
+    container_name: s1-mongo
+    hostname: s1-mongo
+    command: ["mongod", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+    ports:
+      - "27217:27017"     # Compass : mongodb://localhost:27217
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo:/scripts:ro
+
+volumes:
+  pg-data:
+  mongo-data:
